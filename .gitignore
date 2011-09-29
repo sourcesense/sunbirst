@@ -1,5 +1,7 @@
 .DS_Store
 .idea
 *.iml
+*.swp
+*.tmp
 target
 src/data/result
