@@ -25,8 +25,17 @@
 
     <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
         <camel:package>com.sourcesense</camel:package>
+
         <camel:route>
             <camel:from uri="file:src/data?noop=true"/>
+            <camel:split>
+                <camel:xpath>/people/person</camel:xpath>
+                <camel:to uri="direct:documents"/>
+            </camel:split>
+        </camel:route>
+
+        <camel:route>
+            <camel:from uri="direct:documents"/>
             <camel:choice>
                 <camel:when>
                     <camel:xpath>/person/city = 'London'</camel:xpath>
@@ -39,6 +48,7 @@
                 </camel:otherwise>
             </camel:choice>
         </camel:route>
+
     </camel:camelContext>
 
 </beans>
