@@ -18,13 +18,10 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:camel="http://camel.apache.org/schema/spring"
        xmlns:broker="http://activemq.apache.org/schema/core"
        xsi:schemaLocation="
          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
          http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.5.0.xsd">
-
 
     <broker:broker id="broker" useJmx="true" persistent="false" brokerName="localhost">
         <broker:transportConnectors>
@@ -32,37 +29,11 @@
         </broker:transportConnectors>
     </broker:broker>
 
-    <bean id="activemq2" class="org.apache.activemq.camel.component.ActiveMQComponent">
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
         <property name="brokerURL" value="tcp://localhost:51616"/>
     </bean>
 
-    <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
-        <camel:package>com.sourcesense</camel:package>
-
-        <camel:route>
-            <camel:from uri="file:src/data?noop=true"/>
-            <camel:split>
-                <camel:xpath>/people/person</camel:xpath>
-                <camel:to uri="activemq:queue:extracted"/>
-            </camel:split>
-        </camel:route>
-
-        <camel:route>
-            <camel:from uri="activemq:queue:extracted"/>
-            <camel:choice>
-                <camel:when>
-                    <camel:xpath>/person/city = 'London'</camel:xpath>
-                    <camel:log message="UK message"/>
-                    <camel:to uri="file:src/data/target/uk"/>
-                </camel:when>
-                <camel:otherwise>
-                    <camel:log message="Other message"/>
-                    <camel:to uri="file:src/data/target/others"/>
-                </camel:otherwise>
-            </camel:choice>
-        </camel:route>
-
-
-    </camel:camelContext>
-
+    <import resource="classpath:META-INF/extractor-routes.xml"/>
+    <import resource="classpath:META-INF/transformator-routes.xml"/>
+    <import resource="classpath:META-INF/loader-routes.xml"/>
 </beans>
