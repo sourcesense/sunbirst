@@ -32,19 +32,9 @@
                 <camel:xpath>/add/doc</camel:xpath>
                 <multicast>
                     <to uri="activemq:queue:extractor"/>
-                    <!--<to uri="seda:someLogger"/>-->
                 </multicast>
             </camel:split>
         </camel:route>
 
-        <camel:route>
-            <camel:from uri="seda:someLogger"/>
-            <camel:convertBodyTo type="java.lang.String"/>
-            <camel:transform>
-                <camel:simple>${in.body}&#13;</camel:simple>
-            </camel:transform>
-            <to uri="file://data/activemq/?fileExist=Append&amp;fileName=advisoryConnection-${date:now:yyyyMMddSSS}.txt"/>
-        </camel:route>
     </camel:camelContext>
-
 </beans>

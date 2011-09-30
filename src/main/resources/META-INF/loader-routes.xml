@@ -28,7 +28,18 @@
 
         <camel:route>
             <camel:from uri="activemq:queue:transformartor"/>
-            <camel:to uri="file:src/data/target?fileName=${date:now:yyyyMMddSSS}.xml"/>
+
+            <camel:to uri="xslt:add-doc.xsl"/>
+
+            <camel:setHeader headerName="CamelHttpMethod">
+                <camel:constant>POST</camel:constant>
+            </camel:setHeader>
+
+            <camel:to uri="http://localhost:8983/solr/update"/>
+            <camel:to uri="http://localhost:8983/solr/update?commit=true"/>
+
+            <!--<convertBodyTo type="java.lang.String" />-->
+            <camel:to uri="file:src/data/target?fileName=result-${date:now:yyyyMMddSSS}.xml"/>
         </camel:route>
     </camel:camelContext>
 </beans>

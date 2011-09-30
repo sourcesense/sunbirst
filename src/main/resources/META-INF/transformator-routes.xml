@@ -29,7 +29,8 @@
 
         <camel:route>
             <camel:from uri="activemq:queue:extractor"/>
-            <to uri="activemq:queue:transformartor"/>
+            <camel:to uri="xslt:lower-case.xsl"/>
+            <camel:to uri="activemq:queue:transformartor"/>
         </camel:route>
     </camel:camelContext>
 </beans>
