@@ -37,6 +37,8 @@ public class SolrProducer extends DefaultProducer
         if (solrServer == null) throw new Exception();
 
         // TODO: This doesn't actually convert yet. Need to write a converter.
+        //       Most likely, the message will be an internal Document of some
+        //       sort, which will then be transformed into a SolrInputDocument.
         SolrInputDocument doc = exchange.getIn().getBody(SolrInputDocument.class);
         solrServer.add(doc);
         solrServer.commit();

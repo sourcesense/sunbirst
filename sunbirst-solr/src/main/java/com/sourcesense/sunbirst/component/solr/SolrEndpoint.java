@@ -27,6 +27,7 @@ public class SolrEndpoint extends DefaultEndpoint
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
+        // TODO.
         return null;
     }
 

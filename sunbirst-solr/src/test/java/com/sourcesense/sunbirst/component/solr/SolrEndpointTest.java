@@ -16,6 +16,8 @@
  */
 package com.sourcesense.sunbirst.component.solr;
 
+import com.sourcesense.sunbirst.Document;
+
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -29,8 +31,6 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.AfterClass;
 import org.junit.Test;
-
-import java.io.IOException;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -47,32 +47,16 @@ public class SolrEndpointTest extends CamelTestSupport
 
     @Test
     public void addingSolrXmlShouldBeSuccessful() throws Exception {
-        String solrXml = "<add><doc>\n" +
-                "  <field name=\"id\">MA147LL/A</field>\n" +
-                "  <field name=\"name\">Apple 60 GB iPod with Video Playback Black</field>\n" +
-                "  <field name=\"manu\">Apple Computer Inc.</field>\n" +
-                "  <field name=\"cat\">electronics</field>\n" +
-                "  <field name=\"cat\">music</field>\n" +
-                "  <field name=\"features\">iTunes, Podcasts, Audiobooks</field>\n" +
-                "  <field name=\"features\">Stores up to 15,000 songs, 25,000 photos, or 150 hours of video</field>\n" +
-                "  <field name=\"features\">2.5-inch, 320x240 color TFT LCD display with LED backlight</field>\n" +
-                "  <field name=\"features\">Up to 20 hours of battery life</field>\n" +
-                "  <field name=\"features\">Plays AAC, MP3, WAV, AIFF, Audible, Apple Lossless, H.264 video</field>\n" +
-                "  <field name=\"features\">Notes, Calendar, Phone book, Hold button, Date display, Photo wallet, Built-in games, JPEG photo playback, Upgradeable firmware, USB 2.0 compatibility, Playback speed control, Rechargeable capability, Battery level indication</field>\n" +
-                "  <field name=\"includes\">earbud headphones, USB cable</field>\n" +
-                "  <field name=\"weight\">5.5</field>\n" +
-                "  <field name=\"price\">399.00</field>\n" +
-                "  <field name=\"popularity\">10</field>\n" +
-                "  <field name=\"inStock\">true</field>\n" +
-                "  <!-- Dodge City store -->\n" +
-                "  <field name=\"store\">37.7752,-100.0232</field>\n" +
-                "  <field name=\"manufacturedate_dt\">2005-10-12T08:00:00Z</field>\n" +
-                "</doc></add>";
-
-
         clearIndex();
 
-        template.sendBody(solrXml);
+        //Document document = new Document();
+        SolrInputDocument document = new SolrInputDocument();
+        document.addField("id", "MA147LL/A");
+        document.addField("name", "Apple 60 GB iPod with Video Playback Black");
+        document.addField("manu", "Apple Computer Inc.");
+        document.addField("cat", "electronics");
+
+        template.sendBody(document);
 
         // Check things were indexed.
         SolrQuery solrQuery = new SolrQuery();

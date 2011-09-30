@@ -48,7 +48,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.solr</groupId>
-            <artifactId>solr</artifactId>
+            <artifactId>solr-core</artifactId>
             <version>3.3.0</version>
         </dependency>
 
@@ -56,6 +56,12 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>3.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sourcesense</groupId>
+            <artifactId>sunbirst-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

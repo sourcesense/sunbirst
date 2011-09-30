@@ -37,8 +37,9 @@
     </properties>
 
     <modules>
-        <module>sunbirst-route</module>
+        <module>sunbirst-core</module>
         <module>sunbirst-solr</module>
+        <module>sunbirst-route</module>
     </modules>
 
     <dependencyManagement>
@@ -89,7 +90,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
 
             <dependency>
                 <groupId>org.apache.camel</groupId>
