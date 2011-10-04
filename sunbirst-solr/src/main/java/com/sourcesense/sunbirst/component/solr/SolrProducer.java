@@ -40,6 +40,9 @@ public class SolrProducer extends DefaultProducer
         //       Most likely, the message will be an internal Document of some
         //       sort, which will then be transformed into a SolrInputDocument.
         SolrInputDocument doc = exchange.getIn().getBody(SolrInputDocument.class);
+
+        // TODO: Don't really need to set the SolrInputDocument as the body?
+        exchange.getOut().setBody(doc);
         solrServer.add(doc);
         solrServer.commit();
     }

@@ -18,6 +18,7 @@ package com.sourcesense.sunbirst.component.solr;
 
 import com.sourcesense.sunbirst.Document;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -56,6 +57,7 @@ public class SolrEndpointTest extends CamelTestSupport
         document.addField("manu", "Apple Computer Inc.");
         document.addField("cat", "electronics");
 
+        Exchange exchange = createExchangeWithBody(document);
         template.sendBody(document);
 
         // Check things were indexed.
