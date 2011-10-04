@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.camel;
+package org.apache.camel.component.solr;
 
+import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 import java.util.Map;

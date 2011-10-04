@@ -14,15 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.camel;
+package org.apache.camel.component.solr;
 
+import org.apache.camel.Exchange;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.junit4.CamelTestSupport;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.JettySolrRunner;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -52,7 +57,6 @@ public class SolrComponentTest extends CamelTestSupport {
 
         assertEquals(0, response.getStatus());
         assertEquals(1, response.getResults().getNumFound());
-
     }
 
     @Test
@@ -98,10 +102,14 @@ public class SolrComponentTest extends CamelTestSupport {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        // Start a Solr instance.
+        // Set appropriate paths for Solr to use.
         System.setProperty("solr.solr.home", "src/test/resources/solr");
         System.setProperty("solr.data.dir", "target/test-classes/solr/data");
+
+        // Instruct Solr to keep the index in memory, for faster testing.
         System.setProperty("solr.directoryFactory", "solr.RAMDirectoryFactory");
+
+        // Start a Solr instance.
         solrRunner = new JettySolrRunner("/solr", 8999);
         solrRunner.start();
 
