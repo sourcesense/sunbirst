@@ -23,20 +23,43 @@
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
+
     <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
         <camel:package>com.sourcesense</camel:package>
 
         <camel:route>
             <camel:from uri="activemq:queue:transformartor"/>
 
-            <camel:to uri="xslt:add-doc.xsl"/>
-
-            <camel:setHeader headerName="CamelHttpMethod">
-                <camel:constant>POST</camel:constant>
+            <camel:setHeader headerName="solr.field.id">
+                <camel:xpath resultType="java.lang.String">//field[@name="id"]/text()</camel:xpath>
             </camel:setHeader>
 
-            <camel:to uri="http://localhost:8983/solr/update"/>
-            <camel:to uri="http://localhost:8983/solr/update?commit=true"/>
+            <camel:setHeader headerName="solr.field.name">
+                <camel:xpath resultType="java.lang.String">//field[@name="name"]/text()</camel:xpath>
+            </camel:setHeader>
+
+            <camel:setHeader headerName="solr.field.cat">
+                <camel:groovy>
+                    def doc = new XmlParser().parseText(request.body);
+                    def categories = doc.findAll{ it.'@name' == 'cat'};
+                    def result = [];
+                    categories.each { i ->
+                        result.add(i.text());
+                    }
+                    return result;
+                </camel:groovy>
+            </camel:setHeader>
+            <camel:to uri="solr://localhost:8983/solr/"/>
+
+
+            <!--<camel:to uri="xslt:add-doc.xsl"/>-->
+
+            <!--<camel:setHeader headerName="CamelHttpMethod">-->
+            <!--<camel:constant>POST</camel:constant>-->
+            <!--</camel:setHeader>-->
+
+            <!--<camel:to uri="http://localhost:8983/solr/update"/>-->
+            <!--<camel:to uri="http://localhost:8983/solr/update?commit=true"/>-->
 
             <!--<convertBodyTo type="java.lang.String" />-->
             <camel:to uri="file:src/data/target?fileName=result-${date:now:yyyyMMddSSS}.xml"/>
