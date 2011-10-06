@@ -1,20 +1,17 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:amq="http://activemq.apache.org/schema/core"
        xsi:schemaLocation="
             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-            http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.5.0.xsd">
+            http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
     <camelContext xmlns="http://camel.apache.org/schema/spring">
-        <!--
         <route>
-            <from uri="direct:start" />
+            <from uri="direct:start"/>
 
             <split>
                 <xpath>/bookstore/book</xpath>
 
-                <convertBodyTo type="java.lang.String" />
+                <convertBodyTo type="java.lang.String"/>
 
                 <setHeader headerName="solr.field.id">
                     <xpath resultType="java.lang.String">//title/text()</xpath>
@@ -24,61 +21,21 @@
                     <xpath resultType="java.lang.String">//title/text()</xpath>
                 </setHeader>
 
-                <! Multi-valued field
+                <!-- Multi-valued field    -->
                 <setHeader headerName="solr.field.cat">
                     <groovy>
                         def book = new XmlParser().parseText(request.body)
-                        //(book.cat as String[]).collect{ it.toString() }
                         book.cat.collect{ it.text() } as String[]
                     </groovy>
                 </setHeader>
 
-                <to uri="solr://localhost:8983/solr" />
+                <to uri="solr://localhost:8899/solr"/>
             </split>
-        </route>
-        -->
 
-        <route>
-            <from uri="direct:start" />
-            
-            <split>
-                <xpath>/bookstore/book</xpath>
-                <to uri="activemq:solr" />
-            </split>
-        </route>
-
-        <route>
-            <from uri="activemq:solr" />
-
-            <!-- Define methods for mapping content from the input to fields in
-                 the Solr schema. -->
-            <setHeader headerName="solr.field.id">
-                <xpath resultType="java.lang.String">//title/text()</xpath>
+            <setHeader headerName="solr.operation">
+                <constant>COMMIT</constant>
             </setHeader>
-            
-            <setHeader headerName="solr.field.title">
-                <xpath resultType="java.lang.String">//title/text()</xpath>
-            </setHeader>
-
-            <!-- Multi-valued field -->
-            <setHeader headerName="solr.field.cat">
-                <groovy>
-                    def book = new XmlParser().parseText(request.body)
-                    book.cat.collect{ it.text() } as String[]
-                </groovy>
-            </setHeader>
-
-            <to uri="solr://localhost:8983/solr" />
+            <to uri="solr://localhost:8899/solr"/>
         </route>
     </camelContext>
-
-    <amq:broker id="broker" useJmx="true" persistent="false" brokerName="localhost">
-        <amq:transportConnectors>
-            <amq:transportConnector name="tcp" uri="tcp://localhost:51616"/>
-        </amq:transportConnectors>
-    </amq:broker>
-
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
-        <property name="brokerURL" value="tcp://localhost:51616"/>
-    </bean>
 </beans>

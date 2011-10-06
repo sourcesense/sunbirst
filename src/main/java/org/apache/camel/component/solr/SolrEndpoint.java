@@ -20,14 +20,16 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
+import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 
 /**
  * Represents a Solr endpoint.
  */
 public class SolrEndpoint extends DefaultEndpoint {
-    private String address;
+    private CommonsHttpSolrServer solrServer;
 
-    public SolrEndpoint() {}
+    public SolrEndpoint() {
+    }
 
     public SolrEndpoint(String uri, SolrComponent component) {
         super(uri, component);
@@ -37,14 +39,14 @@ public class SolrEndpoint extends DefaultEndpoint {
         super(endpointUri);
     }
 
-    public SolrEndpoint(String endpointUri, SolrComponent component, String address) {
+    public SolrEndpoint(String endpointUri, SolrComponent component, String address) throws Exception {
         super(endpointUri, component);
-        this.address = "http://" + address;
+        solrServer = new CommonsHttpSolrServer("http://" + address);
     }
 
     @Override
     public Producer createProducer() throws Exception {
-        return new SolrProducer(this, address);
+        return new SolrProducer(this);
     }
 
     @Override
@@ -55,5 +57,37 @@ public class SolrEndpoint extends DefaultEndpoint {
     @Override
     public boolean isSingleton() {
         return false;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.solrServer.setMaxRetries(maxRetries);
+    }
+
+    public CommonsHttpSolrServer getSolrServer() {
+        return solrServer;
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        this.solrServer.setSoTimeout(soTimeout);
+    }
+
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.solrServer.setConnectionTimeout(connectionTimeout);
+    }
+
+    public void setDefaultMaxConnectionsPerHost(int defaultMaxConnectionsPerHost) {
+        this.solrServer.setDefaultMaxConnectionsPerHost(defaultMaxConnectionsPerHost);
+    }
+
+    public void setMaxTotalConnections(int maxTotalConnections) {
+        this.solrServer.setMaxTotalConnections(maxTotalConnections);
+    }
+
+    public void setFollowRedirects(boolean followRedirects) {
+        this.solrServer.setFollowRedirects(followRedirects);
+    }
+
+    public void setAllowCompression(boolean allowCompression) {
+        this.solrServer.setAllowCompression(allowCompression);
     }
 }

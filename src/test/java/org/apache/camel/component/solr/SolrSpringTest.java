@@ -16,38 +16,23 @@
  */
 package org.apache.camel.component.solr;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
-
-import org.apache.camel.component.file.FileComponent;
-import org.apache.camel.impl.DefaultExchange;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.JettySolrRunner;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
-
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.junit.AfterClass;
 import org.junit.Before;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.w3c.dom.Document;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -65,9 +50,6 @@ public class SolrSpringTest extends AbstractJUnit4SpringContextTests
     public void endToEndSpringContext() throws Exception {
         template.sendBody(new File("src/test/resources/data/books.xml"));
 
-        // TODO: Fix race condition.
-        Thread.sleep(5000);
-
         // Check things were indexed.
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery("*:*");
@@ -77,11 +59,12 @@ public class SolrSpringTest extends AbstractJUnit4SpringContextTests
         assertEquals(4, response.getResults().getNumFound());
 
         // Check fields were indexed correctly.
-        solrQuery.setQuery("id:Learning XML");
+        solrQuery.setQuery("title:Learning XML");
+
         response = solrServer.query(solrQuery);
 
         SolrDocument doc = response.getResults().get(0);
-        assertEquals(Arrays.asList("Learning XML"), doc.getFieldValue("title"));
+        assertEquals("Learning XML", doc.getFieldValue("id"));
         assertEquals(Arrays.asList("Web", "Technology", "Computers"), doc.getFieldValue("cat"));
     }
 
@@ -95,10 +78,10 @@ public class SolrSpringTest extends AbstractJUnit4SpringContextTests
         System.setProperty("solr.directoryFactory", "solr.RAMDirectoryFactory");
 
         // Start a Solr instance.
-        solrRunner = new JettySolrRunner("/solr", 8983);
+        solrRunner = new JettySolrRunner("/solr", 8899);
         solrRunner.start();
 
-        solrServer = new CommonsHttpSolrServer("http://localhost:8983/solr");
+        solrServer = new CommonsHttpSolrServer("http://localhost:8899/solr");
     }
 
     @AfterClass

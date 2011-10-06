@@ -16,16 +16,13 @@
  */
 package org.apache.camel.component.solr;
 
-import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultProducer;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
 import java.util.Map;
 
 /**
@@ -33,54 +30,35 @@ import java.util.Map;
  */
 public class SolrProducer extends DefaultProducer {
     private static final transient Logger LOG = LoggerFactory.getLogger(SolrProducer.class);
-    private SolrEndpoint endpoint;
-
-
-    private static final Logger Log = LoggerFactory.getLogger(SolrProducer.class);
-
     private SolrServer solrServer;
 
     public SolrProducer(SolrEndpoint endpoint) {
         super(endpoint);
-        this.endpoint = endpoint;
-    }
-
-    public SolrProducer(Endpoint endpoint, String address) {
-        super(endpoint);
-
-        try {
-            solrServer = new CommonsHttpSolrServer(address);
-        } catch (MalformedURLException muex) {
-            log.error("SEVERE: Could not connect to Solr server: {}", address);
-            // TODO: Put exception on Exchange.
-        }
+        solrServer = endpoint.getSolrServer();
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        // TODO.
-        if (solrServer == null) throw new Exception();
-
-        // TODO: This doesn't actually convert yet. Need to write a converter.
-        //       Most likely, the message will be an internal Document of some
-        //       sort, which will then be transformed into a SolrInputDocument.
-
-        SolrInputDocument doc = new SolrInputDocument();
-        doc.setField("text", exchange.getIn().getBody(String.class));
-
-        for (Map.Entry<String, Object> entry : exchange.getIn().getHeaders().entrySet())  {
-            if (entry.getKey().startsWith("solr.field.")) {
-                String fieldName = entry.getKey().substring(11);
-                doc.setField(fieldName, entry.getValue());
+        if (extractOperation(exchange).equals(SolrHeaders.COMMIT)) {
+            solrServer.commit();
+        } else {
+            SolrInputDocument doc = new SolrInputDocument();
+            for (Map.Entry<String, Object> entry : exchange.getIn().getHeaders().entrySet()) {
+                if (entry.getKey().startsWith(SolrHeaders.FIELD)) {
+                    String fieldName = entry.getKey().substring(SolrHeaders.FIELD.length());
+                    doc.setField(fieldName, entry.getValue());
+                }
             }
+            solrServer.add(doc);
         }
+    }
 
-        solrServer.add(doc);
-        solrServer.commit();
+    private String extractOperation(Exchange exchange) {
+        String operation = (String) exchange.getIn().getHeader(SolrHeaders.OPERATION);
+        return (operation == null) ? SolrHeaders.INSERT : operation;
     }
 
     @Override
-    // TODO: What does this do?
     public SolrEndpoint getEndpoint() {
         return (SolrEndpoint) super.getEndpoint();
     }
