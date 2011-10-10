@@ -5,8 +5,8 @@
             http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
     <camelContext xmlns="http://camel.apache.org/schema/spring">
-        <route>
-            <from uri="direct:start"/>
+        <route id="XMLRoute">
+            <from uri="direct:xml-start" />
 
             <split>
                 <xpath>/bookstore/book</xpath>
@@ -37,5 +37,20 @@
             </setHeader>
             <to uri="solr://localhost:8899/solr"/>
         </route>
+
+        <route id="PDFRoute">
+            <from uri="direct:pdf-start" />
+
+            <setHeader headerName="solr.param.literal.id">
+                <simple>${body.name}</simple>
+            </setHeader>
+            <to uri="solr://localhost:8899/solr?requestHandler=/update/extract&amp;sendFile=true" />
+
+            <setHeader headerName="solr.operation">
+                <constant>commit</constant>
+            </setHeader>
+            <to uri="solr://localhost:8899/solr"/>
+        </route>
     </camelContext>
+
 </beans>

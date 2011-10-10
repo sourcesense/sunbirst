@@ -9,7 +9,7 @@ public class InitSolrEndpointTest extends CamelTestSupport {
     private String solrUrl = "solr://localhost:8999/solr";
 
     @Test
-    public void testEndpointCreatedWithAllOptions() throws Exception {
+    public void endpointCreatedCorrectlyWithAllOptions() throws Exception {
         SolrEndpoint solrEndpoint = (SolrEndpoint) context.getEndpoint(solrUrl + getFullOptions());
         assertNotNull(solrEndpoint);
     }
@@ -20,6 +20,9 @@ public class InitSolrEndpointTest extends CamelTestSupport {
     }
 
     private String getFullOptions() {
-        return "?maxRetries=1&soTimeout=100&connectionTimeout=100&defaultMaxConnectionsPerHost=100&maxTotalConnections=100&followRedirects=false&allowCompression=true";
+        return "?maxRetries=1&soTimeout=100&connectionTimeout=100" +
+                "&defaultMaxConnectionsPerHost=100&maxTotalConnections=100" +
+                "&followRedirects=false&allowCompression=true" +
+                "&sendFile=false&requestHandler=/update";
     }
 }

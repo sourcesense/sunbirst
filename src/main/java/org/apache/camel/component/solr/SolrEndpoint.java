@@ -25,8 +25,13 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 /**
  * Represents a Solr endpoint.
  */
-public class SolrEndpoint extends DefaultEndpoint {
+public class SolrEndpoint extends DefaultEndpoint
+{
     private CommonsHttpSolrServer solrServer;
+    private String requestHandler;
+
+    // TODO: This isn't the best name...
+    private boolean sendFile;
 
     public SolrEndpoint() {
     }
@@ -51,43 +56,61 @@ public class SolrEndpoint extends DefaultEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        return new SolrConsumer(this, processor);
+        // TODO: Remove the consumer entirely?
+        //return new SolrConsumer(this, processor);
+        return null;
     }
 
     @Override
     public boolean isSingleton() {
-        return false;
-    }
-
-    public void setMaxRetries(int maxRetries) {
-        this.solrServer.setMaxRetries(maxRetries);
+        return true;
     }
 
     public CommonsHttpSolrServer getSolrServer() {
         return solrServer;
     }
 
+    public void setMaxRetries(int maxRetries) {
+        solrServer.setMaxRetries(maxRetries);
+    }
+
     public void setSoTimeout(int soTimeout) {
-        this.solrServer.setSoTimeout(soTimeout);
+        solrServer.setSoTimeout(soTimeout);
     }
 
     public void setConnectionTimeout(int connectionTimeout) {
-        this.solrServer.setConnectionTimeout(connectionTimeout);
+        solrServer.setConnectionTimeout(connectionTimeout);
     }
 
     public void setDefaultMaxConnectionsPerHost(int defaultMaxConnectionsPerHost) {
-        this.solrServer.setDefaultMaxConnectionsPerHost(defaultMaxConnectionsPerHost);
+        solrServer.setDefaultMaxConnectionsPerHost(defaultMaxConnectionsPerHost);
     }
 
     public void setMaxTotalConnections(int maxTotalConnections) {
-        this.solrServer.setMaxTotalConnections(maxTotalConnections);
+        solrServer.setMaxTotalConnections(maxTotalConnections);
     }
 
     public void setFollowRedirects(boolean followRedirects) {
-        this.solrServer.setFollowRedirects(followRedirects);
+        solrServer.setFollowRedirects(followRedirects);
     }
 
     public void setAllowCompression(boolean allowCompression) {
-        this.solrServer.setAllowCompression(allowCompression);
+        solrServer.setAllowCompression(allowCompression);
+    }
+
+    public void setRequestHandler(String requestHandler) {
+        this.requestHandler = requestHandler;
+    }
+
+    public String getRequestHandler() {
+        return requestHandler;
+    }
+
+    public void setSendFile(boolean sendFile) {
+        this.sendFile = sendFile;
+    }
+
+    public boolean isSendFile() {
+        return sendFile;
     }
 }

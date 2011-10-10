@@ -14,14 +14,13 @@ public class SolrServerMissingTest extends CamelTestSupport {
     protected ProducerTemplate template;
 
     @Test
-    public void indexSingleDocumentOnlyWithId() throws Exception {
+    public void indexSingleDocumentToNonexistentServer() throws Exception {
         Exchange exchange = createExchangeWithBody(null);
         exchange.getIn().setHeader("solr.field.id", "MA147LL/A");
 
         template.send(exchange);
         assertEquals(SolrServerException.class, exchange.getException().getClass());
     }
-
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
@@ -32,6 +31,4 @@ public class SolrServerMissingTest extends CamelTestSupport {
             }
         };
     }
-
-
 }

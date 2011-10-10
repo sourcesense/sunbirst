@@ -18,15 +18,19 @@ package org.apache.camel.component.solr;
 
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
+
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.JettySolrRunner;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -42,30 +46,45 @@ public class SolrSpringTest extends AbstractJUnit4SpringContextTests
     private static JettySolrRunner solrRunner;
     private static CommonsHttpSolrServer solrServer;
 
-    @Produce(uri = "direct:start")
-    protected ProducerTemplate template;
+    @Produce(uri = "direct:xml-start")
+    protected ProducerTemplate xmlRoute;
+
+    @Produce(uri = "direct:pdf-start")
+    protected ProducerTemplate pdfRoute;
 
     @DirtiesContext
     @Test
-    public void endToEndSpringContext() throws Exception {
-        template.sendBody(new File("src/test/resources/data/books.xml"));
+    public void endToEndIndexXMLDocuments() throws Exception {
+        xmlRoute.sendBody(new File("src/test/resources/data/books.xml"));
 
         // Check things were indexed.
-        SolrQuery solrQuery = new SolrQuery();
-        solrQuery.setQuery("*:*");
-        QueryResponse response = solrServer.query(solrQuery);
+        QueryResponse response = executeSolrQuery("*:*");
 
         assertEquals(0, response.getStatus());
         assertEquals(4, response.getResults().getNumFound());
 
         // Check fields were indexed correctly.
-        solrQuery.setQuery("title:Learning XML");
-
-        response = solrServer.query(solrQuery);
+        response = executeSolrQuery("title:Learning XML");
 
         SolrDocument doc = response.getResults().get(0);
         assertEquals("Learning XML", doc.getFieldValue("id"));
         assertEquals(Arrays.asList("Web", "Technology", "Computers"), doc.getFieldValue("cat"));
+    }
+
+    @DirtiesContext
+    @Test
+    public void endToEndIndexPDFDocument() throws Exception {
+        pdfRoute.sendBody(new File("src/test/resources/data/tutorial.pdf"));
+
+        QueryResponse response = executeSolrQuery("*:*");
+
+        assertEquals(0, response.getStatus());
+        assertEquals(1, response.getResults().getNumFound());
+
+        SolrDocument doc = response.getResults().get(0);
+        assertEquals("Solr", doc.getFieldValue("subject"));
+        assertEquals("tutorial.pdf", doc.getFieldValue("id"));
+        assertEquals(Arrays.asList("application/pdf"), doc.getFieldValue("content_type"));
     }
 
     @BeforeClass
@@ -94,5 +113,11 @@ public class SolrSpringTest extends AbstractJUnit4SpringContextTests
         // Clear the Solr index.
         solrServer.deleteByQuery("*:*");
         solrServer.commit();
+    }
+
+    private QueryResponse executeSolrQuery(String query) throws SolrServerException {
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(query);
+        return solrServer.query(solrQuery);
     }
 }

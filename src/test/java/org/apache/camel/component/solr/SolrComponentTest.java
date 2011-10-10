@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.solr;
 
+import org.apache.camel.Endpoint;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
@@ -33,14 +35,23 @@ import org.apache.solr.common.SolrException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class SolrComponentTest extends CamelTestSupport {
 
     private static JettySolrRunner solrRunner;
     private static CommonsHttpSolrServer solrServer;
+
+    @EndpointInject(uri = "solr://localhost:8999/solr")
+    protected SolrEndpoint solrEndpoint;
 
     @Produce(uri = "direct:start")
     protected ProducerTemplate template;
@@ -107,12 +118,11 @@ public class SolrComponentTest extends CamelTestSupport {
         assertEquals(1, response.getResults().getNumFound());
 
         SolrDocument doc = response.getResults().get(0);
-        assertArrayEquals(categories, ((ArrayList) doc.getFieldValue("cat")).toArray());
+        assertArrayEquals(categories, ((List) doc.getFieldValue("cat")).toArray());
     }
 
-
     @Test
-    public void testIndexDocumentsAndThenCommit() throws Exception {
+    public void indexDocumentsAndThenCommit() throws Exception {
         Exchange exchange = createExchangeWithBody(null);
         exchange.getIn().setHeader("solr.field.id", "MA147LL/A");
         exchange.getIn().setHeader("solr.field.name", "Apple 60 GB iPod with Video Playback Black");
@@ -128,6 +138,105 @@ public class SolrComponentTest extends CamelTestSupport {
         QueryResponse afterCommitResponse = executeSolrQuery("*:*");
         assertEquals(0, afterCommitResponse.getStatus());
         assertEquals(1, afterCommitResponse.getResults().getNumFound());
+    }
+
+    @Test
+    public void invalidSolrParametersAreIgnored() throws Exception {
+        Exchange exchange = createExchangeWithBody(null);
+        exchange.getIn().setHeader("solr.field.id", "MA147LL/A");
+        exchange.getIn().setHeader("solr.field.name", "Apple 60 GB iPod with Video Playback Black");
+        exchange.getIn().setHeader("solr.param.invalid-param", "this is ignored");
+
+        template.send(exchange);
+        solrCommit();
+
+        QueryResponse response = executeSolrQuery("*:*");
+        assertEquals(0, response.getStatus());
+        assertEquals(1, response.getResults().getNumFound());
+    }
+
+    @Test
+    public void indexDocumentsToCSVUpdateHandlerWithoutParameters() throws Exception {
+        solrEndpoint.setRequestHandler("/update/csv");
+        solrEndpoint.setSendFile(true);
+
+        Exchange exchange = createExchangeWithBody(new File("src/test/resources/data/books.csv"));
+        template.send(exchange);
+        solrCommit();
+
+        QueryResponse response = executeSolrQuery("*:*");
+        assertEquals(0, response.getStatus());
+        assertEquals(10, response.getResults().getNumFound());
+
+        response = executeSolrQuery("id:0553573403");
+        SolrDocument doc = response.getResults().get(0);
+        assertEquals("A Game of Thrones", doc.getFieldValue("name"));
+        assertEquals(7.99f, doc.getFieldValue("price"));
+    }
+
+    @Test
+    public void indexDocumentsToCSVUpdateHandlerWithParameters() throws Exception {
+        solrEndpoint.setRequestHandler("/update/csv");
+        solrEndpoint.setSendFile(true);
+
+        Exchange exchange = createExchangeWithBody(new File("src/test/resources/data/books.csv"));
+        exchange.getIn().setHeader("solr.param.fieldnames", "id,cat,name,price,inStock,author_t,series_t,sequence_i,genre_s");
+        exchange.getIn().setHeader("solr.param.skip", "cat,sequence_i,genre_s");
+        exchange.getIn().setHeader("solr.param.skipLines", 1);
+
+        template.send(exchange);
+        solrCommit();
+
+        QueryResponse response = executeSolrQuery("*:*");
+        assertEquals(0, response.getStatus());
+        assertEquals(10, response.getResults().getNumFound());
+
+        SolrDocument doc = response.getResults().get(0);
+        assertFalse(doc.getFieldNames().contains("cat"));
+    }
+
+    @Test
+    public void indexPDFDocumentToExtractingRequestHandler() throws Exception {
+        solrEndpoint.setRequestHandler("/update/extract");
+        solrEndpoint.setSendFile(true);
+
+        Exchange exchange = createExchangeWithBody(new File("src/test/resources/data/tutorial.pdf"));
+        exchange.getIn().setHeader("solr.param.literal.id", "tutorial.pdf");
+
+        template.send(exchange);
+        solrCommit();
+
+        QueryResponse response = executeSolrQuery("*:*");
+        assertEquals(0, response.getStatus());
+        assertEquals(1, response.getResults().getNumFound());
+
+        SolrDocument doc = response.getResults().get(0);
+        assertEquals("Solr", doc.getFieldValue("subject"));
+        assertEquals("tutorial.pdf", doc.getFieldValue("id"));
+        assertEquals(Arrays.asList("application/pdf"), doc.getFieldValue("content_type"));
+    }
+
+    @Test
+    @Ignore("No real advantage has yet been discovered to specifying the file in a header.")
+    public void indexPDFDocumentSpecifyingFileInParameters() throws Exception {
+        solrEndpoint.setRequestHandler("/update/extract");
+        solrEndpoint.setSendFile(true);
+
+        Exchange exchange = createExchangeWithBody(null);
+        exchange.getIn().setHeader("solr.param.stream.file", "src/test/resources/data/tutorial.pdf");
+        exchange.getIn().setHeader("solr.param.literal.id", "tutorial.pdf");
+
+        template.send(exchange);
+        solrCommit();
+
+        QueryResponse response = executeSolrQuery("*:*");
+        assertEquals(0, response.getStatus());
+        assertEquals(1, response.getResults().getNumFound());
+
+        SolrDocument doc = response.getResults().get(0);
+        assertEquals("Solr", doc.getFieldValue("subject"));
+        assertEquals("tutorial.pdf", doc.getFieldValue("id"));
+        assertEquals(Arrays.asList("application/pdf"), doc.getFieldValue("content_type"));
     }
 
     private void solrCommit() {
