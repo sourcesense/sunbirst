@@ -56,9 +56,7 @@ public class SolrEndpoint extends DefaultEndpoint
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        // TODO: Remove the consumer entirely?
-        //return new SolrConsumer(this, processor);
-        return null;
+        throw new UnsupportedOperationException("Consumer not supported for Solr endpoint.");
     }
 
     @Override
